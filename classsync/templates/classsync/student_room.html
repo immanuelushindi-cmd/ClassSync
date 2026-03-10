@@ -1,0 +1,216 @@
+﻿{% extends 'classsync/base.html' %}
+{% block title %}{{ session.title }} — ClassSync{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="text-center mb-5 fade-in-up">
+    <div class="mb-2">
+      <span class="rounded-pill px-3 py-2 d-inline-flex align-items-center"
+            style="background:rgba(0,212,170,0.1); color:var(--cs-teal); border:1px solid rgba(0,212,170,0.2); font-size:0.8rem;">
+        <span class="live-dot"></span>Live · {{ session.subject }}
+      </span>
+    </div>
+    <h2 style="font-size:1.9rem; letter-spacing:-0.5px; margin-bottom:0.4rem;">{{ session.title }}</h2>
+    <p style="color:var(--cs-muted); font-size:0.88rem;">
+      Teacher: {{ session.teacher_name }} &nbsp;·&nbsp;
+      <i class="bi bi-shield-check me-1" style="color:var(--cs-teal);"></i>Your questions are anonymous
+    </p>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+    <div class="col-lg-5 col-md-6">
+      <div class="cs-card p-4 fade-in-up stagger-1" style="position:sticky; top:80px;">
+        <h6 class="mb-3" style="font-size:0.95rem;">
+          <i class="bi bi-plus-circle me-2" style="color:var(--cs-teal);"></i>Ask a Question
+        </h6>
+        <div id="submitForm">
+          <div class="mb-3">
+            <label class="cs-label d-block">Your doubt</label>
+            <textarea id="doubtText" class="form-control cs-input" rows="3"
+                      placeholder="What's confusing you? Ask freely — it's anonymous..."
+                      maxlength="500"></textarea>
+            <div class="d-flex justify-content-between mt-1">
+              <span style="font-size:0.73rem; color:var(--cs-muted);">Ctrl+Enter to submit</span>
+              <span style="font-size:0.73rem; color:var(--cs-muted);"><span id="charCount">0</span>/500</span>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="cs-label d-block">Topic tag <span style="opacity:0.55;">(optional)</span></label>
+            <div style="display:flex; align-items:center; gap:0;">
+              <span style="background:var(--cs-surface); border:1.5px solid var(--cs-border); border-right:none;
+                           border-radius:10px 0 0 10px; padding:0.75rem 0.9rem; color:var(--cs-muted); font-size:0.95rem; line-height:1;">#</span>
+              <input type="text" id="topicTag" class="form-control cs-input"
+                     placeholder="loops, oop, functions..." maxlength="40"
+                     style="border-radius:0 10px 10px 0 !important; border-left:none !important;" />
+            </div>
+          </div>
+          <button onclick="submitDoubt()" id="submitBtn" class="btn-teal btn w-100 py-2">
+            <i class="bi bi-send me-2"></i>Submit Anonymously
+          </button>
+          <p class="text-center mt-2 mb-0" style="font-size:0.75rem; color:var(--cs-muted);">
+            <i class="bi bi-eye-slash me-1"></i>Your identity is never revealed
+          </p>
+        </div>
+        <div id="submitSuccess" class="text-center py-3 d-none">
+          <div style="font-size:2.2rem; margin-bottom:0.5rem;">✅</div>
+          <p class="mb-1" style="color:var(--cs-teal); font-weight:500;">Question submitted!</p>
+          <p style="font-size:0.82rem; color:var(--cs-muted); margin:0;">Upvote others below if you have the same doubt.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7 col-md-6">
+      <div class="d-flex align-items-center justify-content-between mb-3 fade-in-up stagger-1">
+        <h6 class="mb-0" style="font-size:0.95rem;">
+          <i class="bi bi-fire me-2" style="color:var(--cs-yellow);"></i>Live Doubt Feed
+        </h6>
+        <span style="font-size:0.77rem; color:var(--cs-muted);">Tap ▲ if you have the same doubt</span>
+      </div>
+      <div id="doubtFeed" class="d-flex flex-column gap-3 fade-in-up stagger-2">
+        {% for doubt in doubts %}
+        <div class="doubt-card {% if forloop.first %}top-doubt{% endif %}" id="sdoubt-{{ doubt.id }}">
+          <div class="d-flex align-items-start gap-3">
+            <div class="flex-shrink-0">
+              <button id="upbtn-{{ doubt.id }}" onclick="upvote({{ doubt.id }}, this)"
+                      class="d-flex flex-column align-items-center gap-1"
+                      style="background:rgba(0,212,170,0.08); border:1.5px solid rgba(0,212,170,0.22);
+                             color:var(--cs-teal); border-radius:10px; padding:0.5rem 0.6rem;
+                             cursor:pointer; transition:all 0.2s; min-width:44px;">
+                <i class="bi bi-arrow-up" style="font-size:0.9rem;"></i>
+                <span style="font-size:0.85rem; font-weight:700;" id="vcount-{{ doubt.id }}">{{ doubt.votes }}</span>
+              </button>
+            </div>
+            <div class="flex-grow-1">
+              <div style="font-size:0.92rem; line-height:1.55;">{{ doubt.text }}</div>
+              <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                {% if doubt.topic_tag %}<span class="badge-topic badge">#{{ doubt.topic_tag }}</span>{% endif %}
+                <span style="font-size:0.73rem; color:var(--cs-muted);">{{ doubt.submitted_at|timesince }} ago</span>
+                {% if forloop.first %}<span class="badge-vote badge" style="font-size:0.7rem;">🔥 Top question</span>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5" id="feedEmpty">
+          <div style="font-size:2.5rem; margin-bottom:0.75rem;">🤔</div>
+          <p style="color:var(--cs-muted);">No doubts yet — be the first to ask!</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const SESSION_PIN = "{{ session.pin }}";
+  const votedDoubts = new Set();
+
+  document.getElementById('doubtText').addEventListener('input', function () {
+    document.getElementById('charCount').textContent = this.value.length;
+  });
+
+  async function pingPresence() {
+    try {
+      await fetch(`/session/${SESSION_PIN}/ping/`, {
+        method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      });
+    } catch {}
+  }
+  pingPresence();
+  setInterval(pingPresence, 30000);
+
+  async function submitDoubt() {
+    const text = document.getElementById('doubtText').value.trim();
+    const tag  = document.getElementById('topicTag').value.trim().toLowerCase().replace('#','');
+    if (!text) { showToast('Please type your doubt first!', 'red'); return; }
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+    try {
+      const fd = new FormData();
+      fd.append('text', text);
+      fd.append('topic_tag', tag);
+      fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      await fetch(`/session/${SESSION_PIN}/submit/`, { method: 'POST', body: fd });
+      document.getElementById('submitForm').classList.add('d-none');
+      document.getElementById('submitSuccess').classList.remove('d-none');
+      setTimeout(() => {
+        document.getElementById('submitForm').classList.remove('d-none');
+        document.getElementById('submitSuccess').classList.add('d-none');
+        document.getElementById('doubtText').value = '';
+        document.getElementById('topicTag').value  = '';
+        document.getElementById('charCount').textContent = '0';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send me-2"></i>Submit Anonymously';
+      }, 2600);
+    } catch {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send me-2"></i>Submit Anonymously';
+      showToast('Failed to submit. Try again.', 'red');
+    }
+  }
+
+  async function upvote(id, btn) {
+    if (votedDoubts.has(id)) { showToast('You already upvoted this!', 'red'); return; }
+    try {
+      const res  = await fetch(`/doubt/${id}/upvote/`, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+      const data = await res.json();
+      if (!data.already_voted) {
+        votedDoubts.add(id);
+        document.getElementById(`vcount-${id}`).textContent = data.votes;
+        btn.style.background  = 'rgba(0,212,170,0.22)';
+        btn.style.borderColor = 'var(--cs-teal)';
+        btn.style.transform   = 'scale(1.1)';
+        setTimeout(() => btn.style.transform = 'scale(1)', 180);
+        showToast('+1 vote added!');
+      } else { showToast('Already voted!', 'red'); }
+    } catch { showToast('Error voting', 'red'); }
+  }
+
+  async function pollFeed() {
+    try {
+      const res  = await fetch(`/session/${SESSION_PIN}/api/`);
+      const data = await res.json();
+      const feed = document.getElementById('doubtFeed');
+      if (data.doubts.length) { const e = document.getElementById('feedEmpty'); if (e) e.remove(); }
+      data.doubts.forEach(d => {
+        if (document.getElementById(`sdoubt-${d.id}`)) {
+          if (!votedDoubts.has(d.id)) { const vc = document.getElementById(`vcount-${d.id}`); if (vc) vc.textContent = d.votes; }
+          return;
+        }
+        const card = document.createElement('div');
+        card.className = 'doubt-card fade-in-up';
+        card.id = `sdoubt-${d.id}`;
+        card.innerHTML = `
+          <div class="d-flex align-items-start gap-3">
+            <div class="flex-shrink-0">
+              <button id="upbtn-${d.id}" onclick="upvote(${d.id}, this)"
+                      class="d-flex flex-column align-items-center gap-1"
+                      style="background:rgba(0,212,170,0.08);border:1.5px solid rgba(0,212,170,0.22);
+                             color:var(--cs-teal);border-radius:10px;padding:0.5rem 0.6rem;cursor:pointer;transition:all 0.2s;min-width:44px;">
+                <i class="bi bi-arrow-up" style="font-size:0.9rem;"></i>
+                <span style="font-size:0.85rem;font-weight:700;" id="vcount-${d.id}">${d.votes}</span>
+              </button>
+            </div>
+            <div class="flex-grow-1">
+              <div style="font-size:0.92rem;line-height:1.55;">${d.text}</div>
+              <div class="d-flex gap-2 mt-2">
+                ${d.topic_tag ? `<span class="badge-topic badge">#${d.topic_tag}</span>` : ''}
+                <span style="font-size:0.73rem;color:var(--cs-muted);">just now</span>
+              </div>
+            </div>
+          </div>`;
+        feed.prepend(card);
+      });
+    } catch {}
+  }
+
+  document.getElementById('doubtText').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitDoubt();
+  });
+
+  setInterval(pollFeed, 4000);
+</script>
+{% endblock %}

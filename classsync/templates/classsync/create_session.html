@@ -1,0 +1,66 @@
+{% extends 'classsync/base.html' %}
+{% block title %}Create Session — ClassSync{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+      <div class="text-center mb-5 fade-in-up">
+        <div style="font-size:3rem; margin-bottom:0.75rem;">🎓</div>
+        <h2 style="font-size:2rem; letter-spacing:-0.5px; margin-bottom:0.5rem;">
+          Create a Live Session
+        </h2>
+        <p style="color:var(--cs-muted);">
+          Fill in your class details — you'll get a shareable PIN in seconds.
+        </p>
+      </div>
+
+      <div class="cs-card p-4 p-md-5 fade-in-up stagger-1">
+        <form method="POST" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-4">
+            <label class="cs-label d-block">Session Title</label>
+            <input type="text" name="title" class="form-control cs-input"
+                   placeholder="e.g. Introduction to Python — Week 4"
+                   required maxlength="200" autofocus />
+          </div>
+
+          <div class="mb-4">
+            <label class="cs-label d-block">Subject / Topic</label>
+            <input type="text" name="subject" class="form-control cs-input"
+                   placeholder="e.g. Computer Science, Biology, Mathematics..."
+                   required maxlength="100" />
+          </div>
+
+          <div class="mb-4">
+            <label class="cs-label d-block">Your Name</label>
+            <input type="text" name="teacher_name" class="form-control cs-input"
+                   placeholder="e.g. Ms. Johnson"
+                   required maxlength="100" />
+          </div>
+
+          <hr style="border-color:var(--cs-border); margin:1.75rem 0;">
+
+          <div class="d-flex gap-4 mb-4 flex-wrap" style="font-size:0.83rem; color:var(--cs-muted);">
+            <span><i class="bi bi-shield-check me-1" style="color:var(--cs-teal)"></i>Students are anonymous</span>
+            <span><i class="bi bi-key me-1" style="color:var(--cs-yellow)"></i>Auto-generates a 4-digit PIN</span>
+          </div>
+
+          <button type="submit" class="btn-teal btn w-100 py-3" style="font-size:1.05rem;">
+            <i class="bi bi-broadcast me-2"></i>Launch Session
+          </button>
+        </form>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="{% url 'home' %}" style="color:var(--cs-muted); font-size:0.88rem; text-decoration:none;">
+          <i class="bi bi-arrow-left me-1"></i>Back to home
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

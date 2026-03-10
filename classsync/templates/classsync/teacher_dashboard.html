@@ -1,0 +1,243 @@
+﻿{% extends 'classsync/base.html' %}
+{% block title %}Live Dashboard · {{ session.pin }} — ClassSync{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 py-4">
+
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4 fade-in-up">
+    <div>
+      <div style="font-size:0.72rem; color:var(--cs-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.25rem;">
+        <span class="live-dot"></span>Live Session
+      </div>
+      <h2 class="mb-0" style="font-size:1.65rem; letter-spacing:-0.5px;">{{ session.title }}</h2>
+      <div style="font-size:0.85rem; color:var(--cs-muted);">{{ session.subject }} &nbsp;·&nbsp; {{ session.teacher_name }}</div>
+    </div>
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div class="pin-box text-center">
+        <div style="font-size:0.65rem; color:var(--cs-muted); text-transform:uppercase; letter-spacing:0.08em;">Session PIN</div>
+        <div class="pin-display" style="font-size:2.2rem; letter-spacing:0.3em;">{{ session.pin }}</div>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'session_analytics' session.pin %}" class="btn-outline-teal btn btn-sm">
+          <i class="bi bi-bar-chart me-1"></i>Analytics
+        </a>
+        <a href="{% url 'session_qr' session.pin %}" target="_blank" class="btn btn-sm"
+           style="background:rgba(59,139,255,0.1); color:var(--cs-blue); border:1px solid rgba(59,139,255,0.25); border-radius:10px;">
+          <i class="bi bi-qr-code me-1"></i>QR Code
+        </a>
+        <form method="POST" action="{% url 'end_session' session.pin %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm"
+                  style="background:rgba(255,77,109,0.1); color:var(--cs-red); border:1px solid rgba(255,77,109,0.3); border-radius:10px;">
+            <i class="bi bi-stop-circle me-1"></i>End Session
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4 fade-in-up stagger-1">
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="border-color:rgba(0,212,170,0.35);">
+        <div class="stat-label"><span class="live-dot" style="width:6px;height:6px;margin-right:4px;"></span>Students Online</div>
+        <div class="stat-number" id="onlineCount" style="color:var(--cs-teal);">{{ session.online_count }}</div>
+        <div style="font-size:0.7rem; color:var(--cs-muted); margin-top:0.3rem;">in this session</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-label"><i class="bi bi-emoji-dizzy me-1"></i>Confusion</div>
+        <div class="stat-number" id="confusionScore"
+             style="color:{% if session.confusion_score > 60 %}var(--cs-red){% elif session.confusion_score > 35 %}var(--cs-yellow){% else %}var(--cs-teal){% endif %};">
+          {{ session.confusion_score }}%
+        </div>
+        <div class="confusion-bar mt-2">
+          <div class="progress">
+            <div class="progress-bar" id="confusionBar" role="progressbar"
+                 style="width:{{ session.confusion_score }}%;
+                        background:{% if session.confusion_score > 60 %}linear-gradient(90deg,var(--cs-yellow),var(--cs-red)){% else %}var(--cs-teal){% endif %};">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-label"><i class="bi bi-chat-dots me-1"></i>Open Doubts</div>
+        <div class="stat-number" id="openDoubts" style="color:var(--cs-blue);">{{ session.open_count }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-label"><i class="bi bi-check-circle me-1"></i>Answered</div>
+        <div class="stat-number" id="answeredCount" style="color:var(--cs-teal);">{{ session.answered_count }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8 fade-in-up stagger-2">
+      <div class="cs-card p-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h5 class="mb-0" style="font-size:1rem;">
+            <i class="bi bi-list-ul me-2" style="color:var(--cs-teal);"></i>Live Doubt Queue
+          </h5>
+          <span style="font-size:0.78rem; color:var(--cs-muted);">Sorted by votes ↓ · Updates every 3s</span>
+        </div>
+        <div id="doubtQueue" class="d-flex flex-column gap-3">
+          {% for doubt in doubts %}
+          <div class="doubt-card {% if forloop.first %}top-doubt{% endif %}" id="doubt-{{ doubt.id }}">
+            <div class="d-flex align-items-start gap-3">
+              <div class="flex-shrink-0">
+                <div class="badge-vote badge" id="dvote-{{ doubt.id }}">▲ {{ doubt.votes }}</div>
+              </div>
+              <div class="flex-grow-1">
+                <div style="font-size:0.92rem; line-height:1.55;">{{ doubt.text }}</div>
+                <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                  {% if doubt.topic_tag %}<span class="badge-topic badge">#{{ doubt.topic_tag }}</span>{% endif %}
+                  <span style="font-size:0.73rem; color:var(--cs-muted);">{{ doubt.submitted_at|timesince }} ago</span>
+                  {% if forloop.first %}<span class="badge-vote badge" style="font-size:0.7rem;">🔥 Top</span>{% endif %}
+                </div>
+              </div>
+              <div class="flex-shrink-0">
+                <button onclick="markAnswered({{ doubt.id }})"
+                        style="background:rgba(0,212,170,0.1); color:var(--cs-teal);
+                               border:1px solid rgba(0,212,170,0.25); border-radius:8px;
+                               padding:0.35rem 0.8rem; font-size:0.82rem; cursor:pointer; white-space:nowrap;">
+                  <i class="bi bi-check2 me-1"></i>Done
+                </button>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-5" id="emptyQueue">
+            <div style="font-size:2.5rem; margin-bottom:0.75rem;">💬</div>
+            <p style="color:var(--cs-muted);">No doubts yet — students are joining...</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="cs-card p-4 text-center mb-4 fade-in-up stagger-2" style="border-color:rgba(0,212,170,0.25);">
+        <div style="font-size:0.72rem; color:var(--cs-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem;">Share with students</div>
+        <div class="pin-box d-inline-block my-2">
+          <div class="pin-display" style="font-size:2.5rem;">{{ session.pin }}</div>
+        </div>
+        <p style="font-size:0.78rem; color:var(--cs-muted); margin:0.75rem 0 0;">
+          Students visit <strong style="color:var(--cs-text);">/join</strong> and enter this PIN. No account needed.
+        </p>
+        <a href="{% url 'session_qr' session.pin %}" target="_blank" class="btn btn-sm mt-3 w-100"
+           style="background:rgba(59,139,255,0.1); color:var(--cs-blue); border:1px solid rgba(59,139,255,0.25); border-radius:8px; font-size:0.85rem;">
+          <i class="bi bi-qr-code me-1"></i>Download QR Code
+        </a>
+      </div>
+      <div class="cs-card p-4 fade-in-up stagger-3">
+        <h6 class="mb-3" style="color:var(--cs-muted); font-size:0.88rem; text-transform:uppercase; letter-spacing:0.05em;">
+          <i class="bi bi-check-circle me-2" style="color:var(--cs-teal);"></i>Answered
+        </h6>
+        <div id="answeredList" class="d-flex flex-column gap-2">
+          {% for doubt in answered %}
+          <div class="d-flex align-items-start gap-2 py-1" style="border-bottom:1px solid var(--cs-border);">
+            <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:var(--cs-teal); font-size:0.8rem;"></i>
+            <span style="font-size:0.83rem; color:var(--cs-muted);">{{ doubt.text|truncatechars:55 }}</span>
+          </div>
+          {% empty %}
+          <p style="font-size:0.85rem; color:var(--cs-muted); margin:0;">No answered doubts yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const SESSION_PIN = "{{ session.pin }}";
+
+  async function pollDoubts() {
+    try {
+      const res  = await fetch(`/session/${SESSION_PIN}/api/`);
+      const data = await res.json();
+      renderQueue(data.doubts);
+      updateStats(data.confusion_score, data.open_count, data.total_doubts, data.answered_count, data.online_count);
+    } catch (e) {}
+  }
+
+  function renderQueue(doubts) {
+    const queue = document.getElementById('doubtQueue');
+    const empty = document.getElementById('emptyQueue');
+    if (doubts.length && empty) empty.remove();
+    doubts.forEach((d, i) => {
+      const existing = document.getElementById(`doubt-${d.id}`);
+      if (existing) {
+        const badge = document.getElementById(`dvote-${d.id}`);
+        if (badge) badge.textContent = `▲ ${d.votes}`;
+        return;
+      }
+      const card = document.createElement('div');
+      card.className = `doubt-card fade-in-up${i === 0 ? ' top-doubt' : ''}`;
+      card.id = `doubt-${d.id}`;
+      card.innerHTML = `
+        <div class="d-flex align-items-start gap-3">
+          <div class="flex-shrink-0">
+            <div class="badge-vote badge" id="dvote-${d.id}">▲ ${d.votes}</div>
+          </div>
+          <div class="flex-grow-1">
+            <div style="font-size:0.92rem;line-height:1.55;">${d.text}</div>
+            <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+              ${d.topic_tag ? `<span class="badge-topic badge">#${d.topic_tag}</span>` : ''}
+              <span style="font-size:0.73rem;color:var(--cs-muted);">just now</span>
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <button onclick="markAnswered(${d.id})"
+                    style="background:rgba(0,212,170,0.1);color:var(--cs-teal);border:1px solid rgba(0,212,170,0.25);
+                           border-radius:8px;padding:0.35rem 0.8rem;font-size:0.82rem;cursor:pointer;">
+              <i class="bi bi-check2 me-1"></i>Done
+            </button>
+          </div>
+        </div>`;
+      queue.prepend(card);
+    });
+  }
+
+  function updateStats(score, open, total, answered, online) {
+    const scoreEl  = document.getElementById('confusionScore');
+    const barEl    = document.getElementById('confusionBar');
+    const openEl   = document.getElementById('openDoubts');
+    const answEl   = document.getElementById('answeredCount');
+    const onlineEl = document.getElementById('onlineCount');
+    if (scoreEl) {
+      scoreEl.textContent = score + '%';
+      scoreEl.style.color = score > 60 ? 'var(--cs-red)' : score > 35 ? 'var(--cs-yellow)' : 'var(--cs-teal)';
+    }
+    if (barEl) {
+      barEl.style.width = score + '%';
+      barEl.style.background = score > 60 ? 'linear-gradient(90deg,var(--cs-yellow),var(--cs-red))' : 'var(--cs-teal)';
+    }
+    if (openEl)   openEl.textContent   = open;
+    if (answEl)   answEl.textContent   = answered;
+    if (onlineEl && online !== undefined) onlineEl.textContent = online;
+  }
+
+  async function markAnswered(id) {
+    try {
+      await fetch(`/doubt/${id}/answer/`, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+      const card = document.getElementById(`doubt-${id}`);
+      if (card) {
+        card.style.transition = 'opacity 0.3s, transform 0.3s';
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(20px)';
+        setTimeout(() => card.remove(), 320);
+      }
+      showToast('Doubt marked as answered ✓');
+    } catch { showToast('Could not mark answered', 'red'); }
+  }
+
+  pollDoubts();
+  setInterval(pollDoubts, 3000);
+</script>
+{% endblock %}

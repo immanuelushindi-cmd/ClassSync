@@ -1,0 +1,126 @@
+{% extends 'classsync/base.html' %}
+{% block title %}Session History — ClassSync{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Header -->
+  <div class="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-5 fade-in-up">
+    <div>
+      <h2 style="font-size:2rem; letter-spacing:-0.5px; margin-bottom:0.25rem;">Session History</h2>
+      <p style="color:var(--cs-muted); margin:0;">All ClassSync sessions — past and live</p>
+    </div>
+    <a href="{% url 'create_session' %}" class="btn-teal btn">
+      <i class="bi bi-plus-circle me-2"></i>New Session
+    </a>
+  </div>
+
+  {% if sessions %}
+  <div class="row g-4">
+    {% for session in sessions %}
+    <div class="col-md-6 col-lg-4 fade-in-up" style="animation-delay:{{ forloop.counter0 }}00ms;">
+      <div class="cs-card p-4 h-100 history-card">
+
+        <!-- Top row -->
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          {% if session.is_active %}
+          <span class="rounded-pill px-2 py-1 d-inline-flex align-items-center"
+                style="background:rgba(0,212,170,0.1); color:var(--cs-teal);
+                       border:1px solid rgba(0,212,170,0.22); font-size:0.75rem;">
+            <span class="live-dot" style="width:6px;height:6px;margin-right:4px;"></span>Live
+          </span>
+          {% else %}
+          <span class="rounded-pill px-2 py-1"
+                style="background:rgba(122,155,191,0.1); color:var(--cs-muted);
+                       border:1px solid rgba(122,155,191,0.2); font-size:0.75rem;">
+            <i class="bi bi-archive me-1"></i>Ended
+          </span>
+          {% endif %}
+          <span class="badge-vote badge" style="font-size:0.73rem;">
+            {{ session.doubts.count }} doubt{{ session.doubts.count|pluralize }}
+          </span>
+        </div>
+
+        <!-- Title & subject -->
+        <h5 class="mb-1" style="font-size:1.05rem; letter-spacing:-0.3px;">{{ session.title }}</h5>
+        <div style="font-size:0.82rem; color:var(--cs-muted); margin-bottom:1rem;">{{ session.subject }}</div>
+
+        <!-- Meta -->
+        <div class="d-flex flex-wrap gap-3 mb-3" style="font-size:0.78rem; color:var(--cs-muted);">
+          <span><i class="bi bi-person me-1"></i>{{ session.teacher_name }}</span>
+          <span><i class="bi bi-calendar me-1"></i>{{ session.created_at|date:"M d, Y" }}</span>
+          <span><i class="bi bi-clock me-1"></i>{{ session.created_at|time:"H:i" }}</span>
+        </div>
+
+        <!-- Confusion bar -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1" style="font-size:0.73rem; color:var(--cs-muted);">
+            <span>Confusion level</span>
+            <span style="color:{% if session.confusion_score > 60 %}var(--cs-red){% elif session.confusion_score > 35 %}var(--cs-yellow){% else %}var(--cs-teal){% endif %};">
+              {{ session.confusion_score }}%
+            </span>
+          </div>
+          <div class="confusion-bar">
+            <div class="progress">
+              <div class="progress-bar" role="progressbar"
+                   style="width:{{ session.confusion_score }}%;
+                          background:{% if session.confusion_score > 60 %}linear-gradient(90deg,var(--cs-yellow),var(--cs-red)){% else %}var(--cs-teal){% endif %};">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr style="border-color:var(--cs-border); margin:1rem 0;">
+
+        <!-- PIN + Actions -->
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div style="font-size:0.65rem; color:var(--cs-muted); text-transform:uppercase; letter-spacing:0.08em;">PIN</div>
+            <div style="font-family:var(--cs-font-head); font-size:1.5rem; font-weight:800;
+                        color:var(--cs-teal); letter-spacing:0.2em;">
+              {{ session.pin }}
+            </div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            {% if session.is_active %}
+            <a href="{% url 'teacher_dashboard' session.pin %}" class="btn-teal btn btn-sm">
+              <i class="bi bi-broadcast me-1"></i>Dashboard
+            </a>
+            {% endif %}
+            <a href="{% url 'session_analytics' session.pin %}"
+               class="btn btn-sm"
+               style="background:rgba(59,139,255,0.1); color:var(--cs-blue);
+                      border:1px solid rgba(59,139,255,0.25); border-radius:8px;">
+              <i class="bi bi-bar-chart me-1"></i>Analytics
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="cs-card p-5 text-center fade-in-up">
+    <div style="font-size:3rem; margin-bottom:1rem;">📚</div>
+    <h4 style="font-size:1.5rem; letter-spacing:-0.3px; margin-bottom:0.5rem;">No sessions yet</h4>
+    <p style="color:var(--cs-muted); max-width:360px; margin:0 auto 1.5rem;">
+      Create your first live session and start collecting student doubts in real time.
+    </p>
+    <a href="{% url 'create_session' %}" class="btn-teal btn px-4 py-2">
+      <i class="bi bi-plus-circle me-2"></i>Create First Session
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .history-card { transition: border-color 0.2s, transform 0.2s; }
+  .history-card:hover { border-color: rgba(0,212,170,0.32); transform: translateY(-4px); }
+</style>
+{% endblock %}

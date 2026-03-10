@@ -1,0 +1,94 @@
+{% extends 'classsync/base.html' %}
+{% block title %}Join Session — ClassSync{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-sm-10 col-md-7 col-lg-5">
+
+      <div class="text-center mb-5 fade-in-up">
+        <div style="font-size:3rem; margin-bottom:0.75rem;">🙋</div>
+        <h2 style="font-size:2rem; letter-spacing:-0.5px; margin-bottom:0.5rem;">
+          Join a Session
+        </h2>
+        <p style="color:var(--cs-muted);">
+          Enter the 4-digit PIN shown on your teacher's screen.
+        </p>
+      </div>
+
+      {% if error %}
+      <div class="mb-4 rounded-3 px-4 py-3 fade-in-up"
+           style="background:rgba(255,77,109,0.1); border:1px solid rgba(255,77,109,0.3); color:var(--cs-red);">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+      </div>
+      {% endif %}
+
+      <div class="cs-card p-4 p-md-5 fade-in-up stagger-1">
+        <form method="POST" id="joinForm" novalidate>
+          {% csrf_token %}
+          <label class="cs-label d-block text-center mb-3">Session PIN</label>
+          <input
+            type="text"
+            name="pin"
+            id="pinInput"
+            class="form-control cs-input text-center"
+            placeholder="• • • •"
+            maxlength="4"
+            minlength="4"
+            pattern="\d{4}"
+            inputmode="numeric"
+            required
+            autocomplete="off"
+            style="font-family:var(--cs-font-head);
+                   font-size:2.8rem;
+                   font-weight:800;
+                   letter-spacing:0.7em;
+                   padding:1rem !important;
+                   color:var(--cs-teal) !important;"
+          />
+          <p class="text-center mt-2 mb-4" style="font-size:0.78rem; color:var(--cs-muted);">
+            Digits only · No login required · 100% anonymous
+          </p>
+          <button type="submit" id="joinBtn" class="btn-teal btn w-100 py-3" style="font-size:1rem;">
+            <i class="bi bi-door-open me-2"></i>Enter Classroom
+          </button>
+        </form>
+      </div>
+
+      <div class="text-center my-4" style="color:var(--cs-muted); font-size:0.85rem;">— or —</div>
+
+      <div class="cs-card p-4 text-center fade-in-up stagger-2" style="border-color:rgba(0,212,170,0.2);">
+        <p class="mb-2" style="color:var(--cs-muted); font-size:0.88rem;">Are you a teacher?</p>
+        <a href="{% url 'create_session' %}" class="btn-outline-teal btn w-100">
+          <i class="bi bi-plus-circle me-2"></i>Create Your Session
+        </a>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="{% url 'home' %}" style="color:var(--cs-muted); font-size:0.88rem; text-decoration:none;">
+          <i class="bi bi-arrow-left me-1"></i>Back to home
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const pinInput = document.getElementById('pinInput');
+  // Only allow digits
+  pinInput.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 4);
+    // Auto-submit when 4 digits entered
+    if (this.value.length === 4) {
+      const btn = document.getElementById('joinBtn');
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Joining...';
+      btn.disabled = true;
+      document.getElementById('joinForm').submit();
+    }
+  });
+  pinInput.focus();
+</script>
+{% endblock %}

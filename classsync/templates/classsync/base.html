@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}ClassSync{% endblock %}</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ── Design Tokens ─────────────────────────────── */
+    :root {
+      --cs-navy:      #08101f;
+      --cs-surface:   #0f1e35;
+      --cs-card:      #162640;
+      --cs-border:    #1e3657;
+      --cs-teal:      #00d4aa;
+      --cs-teal-dim:  #00a882;
+      --cs-blue:      #3b8bff;
+      --cs-red:       #ff4d6d;
+      --cs-yellow:    #ffd166;
+      --cs-text:      #dce8f8;
+      --cs-muted:     #7a9bbf;
+      --cs-font-head: 'Syne', sans-serif;
+      --cs-font-body: 'DM Sans', sans-serif;
+      --cs-radius:    14px;
+      --cs-shadow:    0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    /* ── Base ──────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cs-navy);
+      color: var(--cs-text);
+      font-family: var(--cs-font-body);
+      font-weight: 400;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,212,170,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(59,139,255,0.06) 0%, transparent 60%);
+    }
+
+    /* ── Typography ────────────────────────────────── */
+    h1, h2, h3, h4, h5, h6, .font-head { font-family: var(--cs-font-head); }
+
+    /* ── Navbar ────────────────────────────────────── */
+    .cs-navbar {
+      background: rgba(8,16,31,0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--cs-border);
+      padding: 0.85rem 0;
+    }
+    .cs-navbar .navbar-brand {
+      font-family: var(--cs-font-head);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--cs-teal) !important;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+    }
+    .cs-navbar .navbar-brand span { color: var(--cs-text); }
+    .cs-navbar .nav-link {
+      color: var(--cs-muted) !important;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+      text-decoration: none;
+    }
+    .cs-navbar .nav-link:hover { color: var(--cs-teal) !important; }
+
+    /* ── Live dot ──────────────────────────────────── */
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--cs-teal);
+      border-radius: 50%;
+      margin-right: 5px;
+      animation: pulse-dot 1.6s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.35; transform: scale(0.65); }
+    }
+
+    /* ── Cards ─────────────────────────────────────── */
+    .cs-card {
+      background: var(--cs-card);
+      border: 1px solid var(--cs-border);
+      border-radius: var(--cs-radius);
+      box-shadow: var(--cs-shadow);
+    }
+
+    /* ── Buttons ───────────────────────────────────── */
+    .btn-teal {
+      background: var(--cs-teal);
+      color: var(--cs-navy);
+      font-family: var(--cs-font-head);
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      padding: 0.65rem 1.5rem;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-teal:hover {
+      background: var(--cs-teal-dim);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,212,170,0.25);
+      text-decoration: none;
+    }
+    .btn-teal:active { transform: translateY(0); }
+
+    .btn-outline-teal {
+      border: 1.5px solid var(--cs-teal);
+      color: var(--cs-teal);
+      font-family: var(--cs-font-head);
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 0.65rem 1.5rem;
+      background: transparent;
+      transition: background 0.2s, transform 0.15s;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-outline-teal:hover {
+      background: rgba(0,212,170,0.1);
+      color: var(--cs-teal);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    /* ── Form Controls ─────────────────────────────── */
+    .cs-input {
+      background: var(--cs-surface) !important;
+      border: 1.5px solid var(--cs-border) !important;
+      color: var(--cs-text) !important;
+      border-radius: 10px !important;
+      padding: 0.75rem 1rem !important;
+      font-family: var(--cs-font-body);
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .cs-input:focus {
+      border-color: var(--cs-teal) !important;
+      box-shadow: 0 0 0 3px rgba(0,212,170,0.15) !important;
+      outline: none !important;
+    }
+    .cs-input::placeholder { color: var(--cs-muted) !important; opacity: 0.7; }
+    .cs-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--cs-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
+    }
+
+    /* ── Badges ────────────────────────────────────── */
+    .badge-vote {
+      background: rgba(0,212,170,0.14);
+      color: var(--cs-teal);
+      border: 1px solid rgba(0,212,170,0.3);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.3em 0.7em;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-answered {
+      background: rgba(0,212,170,0.1);
+      color: var(--cs-teal);
+      border: 1px solid rgba(0,212,170,0.25);
+    }
+    .badge-topic {
+      background: rgba(59,139,255,0.14);
+      color: var(--cs-blue);
+      border: 1px solid rgba(59,139,255,0.25);
+      font-size: 0.75rem;
+      padding: 0.22em 0.6em;
+      border-radius: 20px;
+    }
+    .badge-open {
+      background: rgba(255,209,102,0.12);
+      color: var(--cs-yellow);
+      border: 1px solid rgba(255,209,102,0.28);
+    }
+
+    /* ── Confusion Progress Bar ────────────────────── */
+    .confusion-bar .progress {
+      background: var(--cs-surface);
+      border-radius: 20px;
+      height: 10px;
+    }
+    .confusion-bar .progress-bar {
+      border-radius: 20px;
+      transition: width 0.8s ease, background 0.5s;
+    }
+
+    /* ── Doubt Card ────────────────────────────────── */
+    .doubt-card {
+      background: var(--cs-surface);
+      border: 1px solid var(--cs-border);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      transition: border-color 0.2s, transform 0.18s;
+    }
+    .doubt-card:hover { border-color: rgba(0,212,170,0.38); transform: translateX(3px); }
+    .doubt-card.top-doubt { border-left: 3px solid var(--cs-teal); }
+
+    /* ── PIN Display ───────────────────────────────── */
+    .pin-display {
+      font-family: var(--cs-font-head);
+      font-size: 3.2rem;
+      font-weight: 800;
+      letter-spacing: 0.25em;
+      color: var(--cs-teal);
+      text-shadow: 0 0 30px rgba(0,212,170,0.3);
+    }
+    .pin-box {
+      background: var(--cs-surface);
+      border: 2px solid rgba(0,212,170,0.5);
+      border-radius: 16px;
+      padding: 1rem 1.75rem;
+      display: inline-block;
+    }
+
+    /* ── Stat Card ─────────────────────────────────── */
+    .stat-card {
+      background: var(--cs-card);
+      border: 1px solid var(--cs-border);
+      border-radius: var(--cs-radius);
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+      height: 100%;
+    }
+    .stat-number {
+      font-family: var(--cs-font-head);
+      font-size: 2.6rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .stat-label {
+      font-size: 0.77rem;
+      color: var(--cs-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-top: 0.35rem;
+    }
+
+    /* ── Animations ────────────────────────────────── */
+    .fade-in-up { animation: fadeInUp 0.55s ease both; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .stagger-1 { animation-delay: 0.08s; }
+    .stagger-2 { animation-delay: 0.16s; }
+    .stagger-3 { animation-delay: 0.24s; }
+    .stagger-4 { animation-delay: 0.32s; }
+
+    /* ── Toast ─────────────────────────────────────── */
+    .cs-toast-container {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+    }
+    .cs-toast {
+      background: var(--cs-card);
+      border: 1px solid var(--cs-teal);
+      color: var(--cs-text);
+      border-radius: 12px;
+      padding: 0.75rem 1.2rem;
+      font-size: 0.88rem;
+      box-shadow: var(--cs-shadow);
+      animation: slideRight 0.3s ease;
+      margin-top: 0.5rem;
+    }
+    .cs-toast.toast-red { border-color: var(--cs-red); }
+    @keyframes slideRight {
+      from { opacity: 0; transform: translateX(28px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Django messages ───────────────────────────── */
+    .cs-alert {
+      border-radius: 12px;
+      padding: 0.85rem 1.2rem;
+      font-size: 0.9rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Footer ────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--cs-border);
+      color: var(--cs-muted);
+      font-size: 0.82rem;
+      padding: 1.5rem 0;
+      margin-top: 4rem;
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg cs-navbar sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home' %}">
+        <i class="bi bi-broadcast me-1"></i>Class<span>Sync</span>
+      </a>
+      <button class="navbar-toggler border-0" type="button"
+              data-bs-toggle="collapse" data-bs-target="#navMenu"
+              style="color:var(--cs-muted);">
+        <i class="bi bi-list" style="font-size:1.4rem;"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+          <li class="nav-item">
+            <a class="nav-link px-3" href="{% url 'home' %}">
+              <i class="bi bi-house me-1"></i>Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-3" href="{% url 'create_session' %}">
+              <i class="bi bi-plus-circle me-1"></i>Create
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-3" href="{% url 'join_session' %}">
+              <i class="bi bi-door-open me-1"></i>Join
+            </a>
+          </li>
+          <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+            <a class="btn-teal btn btn-sm px-3" href="{% url 'session_history' %}">
+              <i class="bi bi-clock-history me-1"></i>History
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- DJANGO MESSAGES -->
+  {% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+    <div class="cs-alert"
+         style="background:rgba(0,212,170,0.08); border:1px solid rgba(0,212,170,0.25); color:var(--cs-teal);">
+      <i class="bi bi-info-circle me-2"></i>{{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- MAIN CONTENT -->
+  <main>{% block content %}{% endblock %}</main>
+
+  <!-- TOAST CONTAINER -->
+  <div class="cs-toast-container" id="toastContainer"></div>
+
+  <!-- FOOTER -->
+  <footer class="text-center">
+    <div class="container">
+      <span style="font-family:var(--cs-font-head); font-weight:800; color:var(--cs-teal);">ClassSync</span>
+      &nbsp;·&nbsp; Turn every classroom into a smarter one &nbsp;·&nbsp;
+      <i class="bi bi-heart-fill" style="color:var(--cs-red); font-size:0.7rem;"></i>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Global Helpers -->
+  <script>
+    // Toast helper
+    function showToast(msg, type = 'teal') {
+      const container = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `cs-toast${type === 'red' ? ' toast-red' : ''}`;
+      const icon = type === 'red' ? 'bi-exclamation-circle' : 'bi-check-circle';
+      const color = type === 'red' ? 'var(--cs-red)' : 'var(--cs-teal)';
+      t.innerHTML = `<i class="bi ${icon} me-2" style="color:${color}"></i>${msg}`;
+      container.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(20px)';
+        t.style.transition = 'all 0.3s';
+        setTimeout(() => t.remove(), 300);
+      }, 3000);
+    }
+
+    // CSRF helper
+    function getCookie(name) {
+      const v = `; ${document.cookie}`;
+      const p = v.split(`; ${name}=`);
+      if (p.length === 2) return p.pop().split(';').shift();
+      return '';
+    }
+  </script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
