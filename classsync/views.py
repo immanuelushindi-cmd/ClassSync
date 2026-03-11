@@ -1,3 +1,10 @@
+﻿import subprocess, sys
+
+try:
+    import qrcode
+except ImportError:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'qrcode[pil]'])
+    import qrcode
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
